@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>HabitatTap — Guess where they live</title>
+<style>
+  :root{
+    --bg:#071a2b; --panel:#0d2438; --panel2:#12314b; --ink:#eaf4ff;
+    --muted:#9db6cc; --accent:#37d0b6; --accent2:#ffd166; --danger:#ff6b6b;
+    --marine:#37c6d0; --land:#8bd450; --dino:#ff9f68;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+  #app{display:flex;flex-direction:column;height:100dvh;max-width:820px;margin:0 auto}
+  header{padding:12px 16px 8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  header h1{font-size:20px;margin:0;letter-spacing:.5px}
+  header .tag{font-size:12px;color:var(--muted);flex:1}
+  .modeToggle{display:flex;background:var(--panel);border:1px solid var(--panel2);border-radius:999px;overflow:hidden;font-size:12px}
+  .modeToggle button{border:0;background:transparent;color:var(--muted);padding:6px 12px;cursor:pointer;font-weight:700}
+  .modeToggle button.on{background:var(--accent);color:#052018}
+  .bar{display:flex;gap:8px;align-items:center;padding:4px 16px 10px;flex-wrap:wrap}
+  .chip{font-size:12px;background:var(--panel);border:1px solid var(--panel2);padding:5px 10px;border-radius:999px;color:var(--muted)}
+  .chip b{color:var(--ink)}
+  .cat{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
+  .cat.marine{background:var(--marine)} .cat.land{background:var(--land)} .cat.dino{background:var(--dino)}
+  .prompt{padding:2px 16px 10px}
+  .prompt .card{background:linear-gradient(160deg,var(--panel),var(--panel2));border:1px solid #1c3e5c;border-radius:14px;padding:12px 14px}
+  .prompt .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+  .prompt .name{font-size:22px;font-weight:700;margin:2px 0 4px}
+  .prompt .hint{font-size:14px;color:var(--muted)}
+  #map{flex:1;min-height:260px;margin:0 16px;border-radius:14px;overflow:hidden;border:1px solid #1c3e5c;background:#04070d;position:relative;cursor:grab}
+  #map:active{cursor:grabbing}
+  .foot{padding:10px 16px 16px;display:flex;gap:10px;align-items:center}
+  button.act{font:inherit;border:0;border-radius:12px;padding:12px 16px;font-weight:700;cursor:pointer;flex:1}
+  .btn-primary{background:var(--accent);color:#052018}
+  .btn-primary:disabled{background:#20493f;color:#6f8f86;cursor:not-allowed}
+  .footStatus{font-size:13px;color:var(--ink);background:var(--panel);border:1px solid var(--panel2);padding:12px 14px;border-radius:12px;flex:1;text-align:center;font-weight:600}
+  .hintline{font-size:12px;color:var(--muted);flex:0 0 auto;text-align:right;white-space:nowrap}
+  .overlay{position:fixed;inset:0;background:rgba(3,12,20,.72);display:flex;align-items:center;justify-content:center;padding:18px;z-index:1000}
+  .modal{background:var(--panel);border:1px solid #21496b;border-radius:18px;max-width:520px;width:100%;padding:20px;max-height:88dvh;overflow:auto}
+  .modal h2{margin:.1em 0 .3em}
+  .result-dist{font-size:14px;color:var(--muted)}
+  .score-big{font-size:40px;font-weight:800;color:var(--accent2);margin:6px 0}
+  .blurb{background:var(--panel2);border-radius:12px;padding:12px;font-size:14px;line-height:1.5;color:#d6e6f5;margin:10px 0}
+  .rows{display:flex;flex-direction:column;gap:6px;margin:10px 0}
+  .row{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;border-bottom:1px solid #17385433}
+  .row .pts{font-weight:700;color:var(--accent2)}
+  .sharegrid{font-size:26px;letter-spacing:3px;text-align:center;margin:10px 0}
+  .pin{font-size:22px;line-height:1}
+  .muted{color:var(--muted)}
+  .btnrow{display:flex;gap:10px;margin-top:8px}
+  .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:var(--accent);color:#052018;font-weight:700;padding:10px 16px;border-radius:10px;z-index:2000;opacity:0;transition:opacity .2s}
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>🌍 HabitatTap</h1>
+    <span class="tag" id="dayTag">Daily puzzle · drag to spin, scroll to zoom</span>
+    <div class="modeToggle">
+      <button id="mDaily" class="on">Daily</button>
+      <button id="mPractice">Practice</button>
+    </div>
+  </header>
+  <div class="bar">
+    <span class="chip">Round <b id="roundNum">1</b>/5</span>
+    <span class="chip">Score <b id="scoreNum">0</b></span>
+    <span class="chip">🔥 Streak <b id="streakNum">0</b></span>
+    <span class="chip"><span class="cat marine"></span>Marine <span class="cat land"></span>Land <span class="cat dino"></span>Dino</span>
+  </div>
+  <div class="prompt">
+    <div class="card">
+      <div class="k" id="catLabel">Find the habitat</div>
+      <div class="name" id="creatureName">—</div>
+      <div class="hint" id="creatureHint">—</div>
+    </div>
+  </div>
+  <div id="map"></div>
+  <div class="foot">
+    <span class="footStatus" id="footStatus">🌐 Tap the globe where this creature lives</span>
+    <span class="hintline" id="footHint"></span>
+  </div>
+</div>
+<div class="toast" id="toast">Copied!</div>
+
+<script src="https://unpkg.com/globe.gl@2/dist/globe.gl.min.js"></script>
+<script>
+/* ===================== Creature pool ===================== */
+/* coords = a representative real spot for the species / fossil site.
+   difficulty 1 (easy/famous) … 5 (obscure). */
+const POOL = [
+/* ---- LAND ---- */
+{name:"Red Kangaroo",cat:"land",lat:-25.0,lon:133.0,difficulty:1,hint:"A hopping marsupial of dry open plains.",blurb:"Red kangaroos roam the arid interior of Australia, bounding across the outback at over 55 km/h."},
+{name:"Giant Panda",cat:"land",lat:30.7,lon:103.0,difficulty:2,hint:"A bamboo-eating bear from misty mountains.",blurb:"Giant pandas live in a few mountain ranges of central China, mainly Sichuan, feeding almost entirely on bamboo."},
+{name:"Polar Bear",cat:"land",lat:75.0,lon:-95.0,difficulty:2,hint:"The largest land carnivore, at home on sea ice.",blurb:"Polar bears hunt seals across the Arctic sea ice around Canada, Greenland, Svalbard, Russia and Alaska."},
+{name:"African Elephant",cat:"land",lat:-2.3,lon:34.8,difficulty:2,hint:"The largest land animal, on savanna grasslands.",blurb:"African elephants range across sub-Saharan savanna and forest; the East African plains of Kenya and Tanzania hold famous herds."},
+{name:"Bengal Tiger",cat:"land",lat:21.9,lon:89.2,difficulty:3,hint:"A striped big cat of mangrove and jungle.",blurb:"Bengal tigers live across India and Bangladesh, including the tidal Sundarbans mangroves shared between the two countries."},
+{name:"Ring-tailed Lemur",cat:"land",lat:-22.0,lon:45.0,difficulty:3,hint:"A striped-tailed primate from one big island.",blurb:"Ring-tailed lemurs are found only on Madagascar, sunbathing in troops across its southern spiny forests."},
+{name:"Giant Anteater",cat:"land",lat:-16.5,lon:-56.5,difficulty:4,hint:"A long-snouted insect specialist of wetlands.",blurb:"Giant anteaters range across Central and South America; Brazil's Pantanal wetland is a stronghold."},
+{name:"Snow Leopard",cat:"land",lat:35.0,lon:77.0,difficulty:4,hint:"A ghostly cat of high, cold mountains.",blurb:"Snow leopards prowl the high ranges of Central Asia — the Himalayas, Tibet and the mountains of Kyrgyzstan and Mongolia."},
+{name:"Kiwi",cat:"land",lat:-41.3,lon:174.8,difficulty:3,hint:"A flightless nocturnal bird with a long beak.",blurb:"Kiwi are found only in New Zealand, snuffling for worms in the forest floor at night with nostrils at the tip of their bill."},
+{name:"Meerkat",cat:"land",lat:-24.5,lon:20.0,difficulty:3,hint:"A social burrowing mammal of southern deserts.",blurb:"Meerkats live in the Kalahari and surrounding drylands of southern Africa, taking turns as lookout sentries."},
+{name:"Three-toed Sloth",cat:"land",lat:9.2,lon:-79.5,difficulty:4,hint:"A slow tree-dweller of tropical rainforest.",blurb:"Three-toed sloths inhabit the rainforests of Central and northern South America, moving so slowly algae grows on their fur."},
+{name:"American Bison",cat:"land",lat:44.6,lon:-110.5,difficulty:3,hint:"A shaggy plains giant of North America.",blurb:"Bison once covered the Great Plains; today Yellowstone in Wyoming holds one of the last continuously wild herds."},
+{name:"Orangutan",cat:"land",lat:0.5,lon:114.0,difficulty:3,hint:"A red-haired great ape of steamy jungle.",blurb:"Orangutans live only on Borneo and Sumatra, the largest tree-dwelling animals, swinging through Southeast Asian rainforest."},
+{name:"Mountain Gorilla",cat:"land",lat:-1.4,lon:29.5,difficulty:4,hint:"A great ape of high volcanic forest.",blurb:"Mountain gorillas survive only in the Virunga volcanoes and Bwindi forest where Rwanda, Uganda and the DR Congo meet."},
+{name:"Platypus",cat:"land",lat:-33.0,lon:150.5,difficulty:4,hint:"An egg-laying mammal with a duck-like bill.",blurb:"The platypus lives in freshwater streams of eastern Australia, one of the few mammals that lays eggs."},
+{name:"Fennec Fox",cat:"land",lat:23.0,lon:10.0,difficulty:4,hint:"A tiny big-eared fox of hot sand.",blurb:"Fennec foxes live across the Sahara of North Africa, their huge ears shedding heat and tracking prey underground."},
+{name:"Capybara",cat:"land",lat:-15.5,lon:-58.0,difficulty:4,hint:"The world's largest rodent, near water.",blurb:"Capybaras live across South America's wetlands and riverbanks, semi-aquatic grazers the size of a large dog."},
+{name:"Wild Bactrian Camel",cat:"land",lat:41.0,lon:90.0,difficulty:5,hint:"A two-humped camel of a cold desert.",blurb:"Critically endangered wild Bactrian camels survive in the Gobi Desert of Mongolia and northwest China."},
+{name:"Komodo Dragon",cat:"land",lat:-8.6,lon:119.5,difficulty:4,hint:"The world's largest lizard, on a few islands.",blurb:"Komodo dragons live on Komodo, Rinca and neighbouring islands in Indonesia, ambushing prey with a venomous bite."},
+{name:"Galápagos Giant Tortoise",cat:"land",lat:-0.6,lon:-90.4,difficulty:3,hint:"A century-living reptile of volcanic isles.",blurb:"Galápagos giant tortoises are found only on the Galápagos off Ecuador, with distinct shells on different islands."},
+/* ---- MARINE ---- */
+{name:"Emperor Penguin",cat:"marine",lat:-77.5,lon:166.7,difficulty:2,hint:"A flightless diver that breeds on winter ice.",blurb:"Emperor penguins breed on Antarctic sea ice, enduring −40°C and diving over 500 m for fish and squid."},
+{name:"Great White Shark",cat:"marine",lat:-34.6,lon:20.0,difficulty:3,hint:"An apex predator of cool coastal seas.",blurb:"Great whites patrol temperate coasts worldwide; the seas off South Africa's Cape are a famous hotspot."},
+{name:"Sea Otter",cat:"marine",lat:55.0,lon:-160.0,difficulty:3,hint:"A tool-using mammal of cold kelp forests.",blurb:"Sea otters live along the North Pacific rim from California to Alaska, cracking shellfish on stone tools."},
+{name:"Clownfish",cat:"marine",lat:-18.3,lon:147.7,difficulty:3,hint:"A little reef fish that hides in anemones.",blurb:"Clownfish live in warm Indo-Pacific reefs such as Australia's Great Barrier Reef, sheltering among stinging anemones."},
+{name:"West Indian Manatee",cat:"marine",lat:27.8,lon:-82.6,difficulty:3,hint:"A gentle 'sea cow' of warm shallows.",blurb:"Manatees graze seagrass in the warm coastal waters and springs of Florida and the Caribbean."},
+{name:"Orca",cat:"marine",lat:48.4,lon:-123.0,difficulty:3,hint:"A black-and-white apex ocean predator.",blurb:"Orcas roam every ocean; the Salish Sea off Washington and British Columbia is home to well-studied resident pods."},
+{name:"Narwhal",cat:"marine",lat:74.0,lon:-58.0,difficulty:4,hint:"A tusked whale of high-Arctic waters.",blurb:"Narwhals live in the Arctic waters around Baffin Bay between Canada and Greenland, the males bearing a spiral tusk."},
+{name:"Whale Shark",cat:"marine",lat:21.0,lon:-86.8,difficulty:4,hint:"The biggest fish, a gentle filter feeder.",blurb:"Whale sharks gather in warm seas worldwide; huge numbers aggregate off Mexico's Yucatán Peninsula each summer."},
+{name:"Marine Iguana",cat:"marine",lat:-0.9,lon:-91.0,difficulty:4,hint:"The only lizard that forages in the sea.",blurb:"Marine iguanas live solely on the Galápagos, diving into cold Pacific water to graze algae and sneezing out salt."},
+{name:"Giant Pacific Octopus",cat:"marine",lat:48.4,lon:-124.7,difficulty:4,hint:"A huge, clever mollusc of cold coasts.",blurb:"Giant Pacific octopuses live along the cold northern Pacific from California to Alaska and Japan."},
+{name:"Walrus",cat:"marine",lat:70.0,lon:-160.0,difficulty:3,hint:"A tusked, whiskered giant of Arctic seas.",blurb:"Walruses haul out on ice and shores across the Arctic, using tusks and whiskers to find clams on the seabed."},
+{name:"Galápagos Penguin",cat:"marine",lat:-0.3,lon:-90.6,difficulty:5,hint:"The only penguin found at the equator.",blurb:"The Galápagos penguin is the sole penguin living at the equator, cooled by the Humboldt Current in the Galápagos."},
+{name:"Leafy Sea Dragon",cat:"marine",lat:-35.3,lon:138.4,difficulty:5,hint:"A camouflaged relative of the seahorse.",blurb:"Leafy sea dragons live only in the cool coastal waters of southern and western Australia, disguised as drifting weed."},
+{name:"Coelacanth",cat:"marine",lat:-12.2,lon:44.3,difficulty:5,hint:"A 'living fossil' fish once thought extinct.",blurb:"Coelacanths, long believed extinct with the dinosaurs, were rediscovered off the Comoros Islands near Madagascar."},
+{name:"Beluga Whale",cat:"marine",lat:68.0,lon:-89.0,difficulty:4,hint:"A white, chatty whale of cold northern seas.",blurb:"Belugas live across the Arctic, gathering in summer estuaries like Canada's Hudson Bay to moult and calve."},
+{name:"Dugong",cat:"marine",lat:24.5,lon:52.5,difficulty:5,hint:"A seagrass-grazing cousin of the manatee.",blurb:"Dugongs graze seagrass in warm Indo-Pacific shallows, with large populations in the Persian Gulf and off Australia."},
+/* ---- DINOSAURS (fossil sites) ---- */
+{name:"Tyrannosaurus rex",cat:"dino",lat:47.5,lon:-106.5,difficulty:3,hint:"Its best fossils come from a US badland.",blurb:"T. rex fossils come from the Hell Creek Formation of Montana and the Dakotas, from the very end of the Cretaceous ~66 Mya."},
+{name:"Triceratops",cat:"dino",lat:45.0,lon:-104.0,difficulty:3,hint:"A three-horned plant-eater of the American West.",blurb:"Triceratops is found in the latest-Cretaceous rocks of Montana, Wyoming and the Dakotas, alongside T. rex."},
+{name:"Stegosaurus",cat:"dino",lat:40.0,lon:-108.0,difficulty:4,hint:"Plated dinosaur from a famous Western bed.",blurb:"Stegosaurus comes mainly from the Morrison Formation of Colorado, Wyoming and Utah, deposited in the Late Jurassic."},
+{name:"Velociraptor",cat:"dino",lat:43.5,lon:100.0,difficulty:5,hint:"A feathered hunter from a central Asian desert.",blurb:"Real Velociraptor fossils come from the Gobi Desert of Mongolia and northern China — turkey-sized and feathered."},
+{name:"Spinosaurus",cat:"dino",lat:30.5,lon:-6.0,difficulty:5,hint:"A sail-backed predator from North Africa.",blurb:"Spinosaurus is known from the Kem Kem beds of Morocco, a semi-aquatic giant of Cretaceous river systems."},
+{name:"Diplodocus",cat:"dino",lat:42.0,lon:-107.0,difficulty:4,hint:"A whip-tailed long-necked giant.",blurb:"Diplodocus comes from the Morrison Formation of Wyoming and Colorado, one of the longest dinosaurs known."},
+{name:"Iguanodon",cat:"dino",lat:50.4,lon:4.4,difficulty:5,hint:"An early-found plant-eater from Europe.",blurb:"Iguanodon is famous from a bonebed at Bernissart in Belgium, one of the first dinosaurs ever scientifically described."},
+{name:"Argentinosaurus",cat:"dino",lat:-38.0,lon:-70.0,difficulty:4,hint:"One of the biggest animals ever, from the south.",blurb:"Argentinosaurus, among the largest land animals ever, is known from Patagonia in Argentina."},
+{name:"Coelophysis",cat:"dino",lat:36.3,lon:-106.5,difficulty:5,hint:"A slim early dinosaur found in huge numbers.",blurb:"Hundreds of Coelophysis were found together at Ghost Ranch, New Mexico, from the Late Triassic."},
+{name:"Megalosaurus",cat:"dino",lat:51.7,lon:-1.3,difficulty:5,hint:"The very first dinosaur ever named.",blurb:"Megalosaurus, from the Jurassic rocks of Oxfordshire, England, was the first dinosaur to be formally named, in 1824."},
+{name:"Carnotaurus",cat:"dino",lat:-45.0,lon:-68.0,difficulty:5,hint:"A horned meat-eater from the far south.",blurb:"Carnotaurus, a horned predator with tiny arms, comes from the Cretaceous of Patagonia, Argentina."}
+];
+
+/* ===================== Seeded RNG ===================== */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function seededShuffle(arr,rng){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+const EPOCH = Date.UTC(2026,6,15); // Jul 15 2026 = Day 1
+function todayDayNumber(){const now=new Date();const utc=Date.UTC(now.getFullYear(),now.getMonth(),now.getDate());return Math.floor((utc-EPOCH)/86400000)+1;}
+
+const MAX_PER_ROUND=[100,150,200,250,300]; // sums to 1000
+function buildRounds(rng){
+  // ensure a spread of categories where possible, then difficulty order
+  const picks=seededShuffle(POOL,rng).slice(0,5);
+  picks.sort((a,b)=>a.difficulty-b.difficulty);
+  return picks.map((c,i)=>({...c,maxPts:MAX_PER_ROUND[i]}));
+}
+
+/* ===================== State ===================== */
+let mode='daily';           // 'daily' | 'practice'
+let dayNum=todayDayNumber();
+let rounds=[], idx=0, total=0, results=[], guess=null, answered=false;
+
+function newGame(){
+  const rng = mode==='daily' ? mulberry32(dayNum*2654435761>>>0) : mulberry32((Math.random()*1e9)>>>0);
+  rounds=buildRounds(rng); idx=0; total=0; results=[];
+  document.getElementById('scoreNum').textContent=0;
+  document.getElementById('dayTag').textContent = mode==='daily' ? ('Daily #'+dayNum+' · drag to spin, scroll to zoom') : 'Practice · drag to spin, scroll to zoom';
+  globe.pointOfView({lat:20,lng:0,altitude:2.3},600);
+  renderRound();
+}
+
+/* ===================== Globe ===================== */
+const globeEl=document.getElementById('map');
+function truthEmoji(cat){return cat==='marine'?'🌊':cat==='dino'?'🦖':'🐾';}
+const globe=Globe()(globeEl)
+  .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+  .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
+  .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
+  .showAtmosphere(true).atmosphereColor('#6cc0ff').atmosphereAltitude(0.16)
+  .htmlElementsData([])
+  .htmlElement(d=>{const el=document.createElement('div');el.textContent=d.emoji;el.style.fontSize='26px';el.style.transform='translate(-50%,-90%)';el.style.pointerEvents='none';el.style.filter='drop-shadow(0 2px 2px rgba(0,0,0,.7))';return el;})
+  .htmlLat(d=>d.lat).htmlLng(d=>d.lng)
+  .arcsData([]).arcColor(()=>'#ffd166').arcStroke(0.6).arcAltitudeAutoScale(0.4)
+  .arcDashLength(0.5).arcDashGap(0.25).arcDashAnimateTime(1500);
+globe.pointOfView({lat:20,lng:0,altitude:2.3});
+const ctr=globe.controls(); ctr.autoRotate=false; ctr.enableZoom=true; ctr.minDistance=140; ctr.maxDistance=520; ctr.rotateSpeed=0.6;
+function sizeGlobe(){globe.width(globeEl.clientWidth).height(globeEl.clientHeight);}
+sizeGlobe(); new ResizeObserver(sizeGlobe).observe(globeEl);
+
+function setMarkers(list){globe.htmlElementsData(list);}
+function clearMarkers(){setMarkers([]);globe.arcsData([]);}
+
+globe.onGlobeClick(({lat,lng})=>{
+  if(answered) return;
+  guess={lat:lat,lng:lng};
+  setMarkers([{lat:lat,lng:lng,emoji:'📍'}]);
+  reveal();
+});
+function midLngOf(a,b){let d=b-a;if(d>180)d-=360;if(d<-180)d+=360;let m=a+d/2;if(m>180)m-=360;if(m<-180)m+=360;return m;}
+
+/* ===================== Distance + scoring ===================== */
+function haversine(a,b){const R=6371,toR=x=>x*Math.PI/180;const dLat=toR(b.lat-a.lat),dLon=toR(b.lng-a.lng);const lat1=toR(a.lat),lat2=toR(b.lat);const h=Math.sin(dLat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2;return 2*R*Math.asin(Math.min(1,Math.sqrt(h)));}
+function scoreFor(distKm,maxPts){return Math.round(maxPts*Math.exp(-distKm/1500));}
+
+/* ===================== Round flow ===================== */
+function renderRound(){
+  answered=false; guess=null; clearMarkers();
+  const r=rounds[idx];
+  document.getElementById('roundNum').textContent=idx+1;
+  document.getElementById('scoreNum').textContent=total;
+  document.getElementById('creatureName').textContent=r.name;
+  document.getElementById('creatureHint').textContent=r.hint;
+  const nice=r.cat==='marine'?'Marine · find the ocean habitat':r.cat==='dino'?'Dinosaur · find the fossil site':'Land animal · find the habitat';
+  document.getElementById('catLabel').innerHTML='<span class="cat '+r.cat+'"></span>'+nice;
+  document.getElementById('footStatus').textContent='🌐 Tap the globe where this creature lives';
+  document.getElementById('footHint').textContent='Up to '+r.maxPts+' pts';
+}
+
+function reveal(){
+  if(answered) return;
+  answered=true;
+  document.getElementById('footStatus').textContent='📍 Revealing the real location…';
+  const r=rounds[idx];
+  const truth={lat:r.lat,lng:r.lon};
+  const dist=haversine({lat:guess.lat,lng:guess.lng},truth);
+  const pts=scoreFor(dist,r.maxPts);
+  total+=pts; results.push({...r,dist,pts});
+  document.getElementById('scoreNum').textContent=total;
+  setMarkers([{lat:guess.lat,lng:guess.lng,emoji:'📍'},{lat:r.lat,lng:r.lon,emoji:truthEmoji(r.cat)}]);
+  globe.arcsData([{startLat:guess.lat,startLng:guess.lng,endLat:r.lat,endLng:r.lon}]);
+  // Dramatic fly-in: pull back to space, then swoop down to frame guess + answer.
+  const midLat=(guess.lat+r.lat)/2, midLng=midLngOf(guess.lng,r.lon);
+  const frameAlt=Math.min(2.3,Math.max(0.65,dist/3200));
+  const ct=globe.controls(); ct.autoRotate=false;
+  globe.pointOfView({lat:midLat*0.5, lng:midLng, altitude:3.6}, 500);            // yank back into orbit
+  setTimeout(()=>globe.pointOfView({lat:midLat, lng:midLng, altitude:frameAlt}, 1500), 520); // swoop down
+  setTimeout(()=>showResult(r,dist,pts), 2200);                                  // popup only after the flight
+}
+function next(){
+  idx++; closeOverlay();
+  if(idx>=5) finish(); else renderRound();
+}
+
+/* ===================== Overlays ===================== */
+function overlay(html){closeOverlay();const o=document.createElement('div');o.className='overlay';o.id='ov';o.innerHTML='<div class="modal">'+html+'</div>';document.body.appendChild(o);}
+function closeOverlay(){const o=document.getElementById('ov');if(o)o.remove();}
+function fmtDist(km){return km<10?km.toFixed(1)+' km':Math.round(km).toLocaleString()+' km';}
+
+function showResult(r,dist,pts){
+  overlay(
+    '<h2>'+r.name+'</h2>'+
+    '<div class="score-big">+'+pts+' pts</div>'+
+    '<div class="result-dist">You were <b>'+fmtDist(dist)+'</b> away · up to '+r.maxPts+'</div>'+
+    '<div class="blurb">'+r.blurb+'</div>'+
+    '<button class="act btn-primary" onclick="next()">'+(idx<4?'Next creature →':'See final score')+'</button>'
+  );
+}
+
+/* ===================== Finish + streak + share ===================== */
+function squareFor(ratio){return ratio>=0.9?'🟩':ratio>=0.7?'🟨':ratio>=0.4?'🟧':ratio>=0.15?'🟥':'⬛';}
+function catEmoji(cat){return cat==='marine'?'🌊':cat==='dino'?'🦖':'🐾';}
+
+function updateStreak(){
+  if(mode!=='daily') return getStreak();
+  try{
+    const s=JSON.parse(localStorage.getItem('habitattap')||'{}');
+    if(s.lastDay===dayNum) return s.streak||1;           // already counted today
+    s.streak = (s.lastDay===dayNum-1) ? (s.streak||0)+1 : 1;
+    s.lastDay=dayNum; localStorage.setItem('habitattap',JSON.stringify(s));
+    return s.streak;
+  }catch(e){return 1;}
+}
+function getStreak(){try{const s=JSON.parse(localStorage.getItem('habitattap')||'{}');return s.streak||0;}catch(e){return 0;}}
+
+function shareText(){
+  const grid=results.map(r=>squareFor(r.pts/r.maxPts)).join('');
+  const cats=results.map(r=>catEmoji(r.cat)).join('');
+  const head = mode==='daily' ? ('HabitatTap #'+dayNum) : 'HabitatTap (practice)';
+  return head+' — '+total+'/1000\n'+grid+'\n'+cats;
+}
+
+function finish(){
+  const streak=updateStreak();
+  document.getElementById('streakNum').textContent=streak;
+  const rowsHtml=results.map(r=>
+    '<div class="row"><span><span class="cat '+r.cat+'"></span>'+r.name+' <span class="muted">· '+fmtDist(r.dist)+'</span></span><span class="pts">'+r.pts+'</span></div>'
+  ).join('');
+  const rating=total>=850?'🏆 Naturalist':total>=650?'🌟 Explorer':total>=450?'🧭 Wanderer':'🌱 Rookie';
+  const grid=results.map(r=>squareFor(r.pts/r.maxPts)).join('');
+  overlay(
+    '<h2>'+(mode==='daily'?('Daily #'+dayNum):'Practice')+' complete</h2>'+
+    '<div class="score-big">'+total+' / 1000</div>'+
+    '<div class="result-dist">'+rating+(mode==='daily'?' · 🔥 streak '+streak:'')+'</div>'+
+    '<div class="sharegrid">'+grid+'</div>'+
+    '<div class="rows">'+rowsHtml+'</div>'+
+    '<div class="btnrow">'+
+      '<button class="act btn-primary" onclick="doShare()">Share result</button>'+
+      '<button class="act btn-primary" onclick="closeOverlay();newGame()">'+(mode==='daily'?'Replay':'Play again')+'</button>'+
+    '</div>'+
+    (mode==='daily'?'<p class="muted" style="text-align:center;font-size:12px;margin:10px 0 0">Come back tomorrow for puzzle #'+(dayNum+1)+'</p>':'')
+  );
+}
+
+function doShare(){
+  const txt=shareText();
+  if(navigator.share){navigator.share({text:txt}).catch(()=>copyText(txt));}
+  else copyText(txt);
+}
+function copyText(txt){
+  const done=()=>toast('Copied to clipboard!');
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done).catch(()=>fallbackCopy(txt,done));}
+  else fallbackCopy(txt,done);
+}
+function fallbackCopy(txt,cb){const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');cb();}catch(e){alert(txt);}ta.remove();}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600);}
+
+/* ===================== Mode toggle ===================== */
+document.getElementById('mDaily').addEventListener('click',()=>setMode('daily'));
+document.getElementById('mPractice').addEventListener('click',()=>setMode('practice'));
+function setMode(m){
+  if(mode===m) return;
+  mode=m;
+  document.getElementById('mDaily').classList.toggle('on',m==='daily');
+  document.getElementById('mPractice').classList.toggle('on',m==='practice');
+  closeOverlay(); newGame();
+}
+
+document.getElementById('streakNum').textContent=getStreak();
+newGame();
+</script>
+</body>
+</html>
