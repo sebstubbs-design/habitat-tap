@@ -4,53 +4,74 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <title>HabitatTap — Guess where they live</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#071a2b; --panel:#0d2438; --panel2:#12314b; --ink:#eaf4ff;
-    --muted:#9db6cc; --accent:#37d0b6; --accent2:#ffd166; --danger:#ff6b6b;
-    --marine:#37c6d0; --land:#8bd450; --dino:#ff9f68;
+    --bg1:#080b14; --bg2:#0d1322;
+    --panel:rgba(255,255,255,.045);
+    --panel2:rgba(255,255,255,.075);
+    --border:rgba(255,255,255,.10);
+    --border2:rgba(255,255,255,.16);
+    --ink:#eef2fb; --muted:#8fa0bd;
+    --accent:#5eead4; --accent-deep:#2dd4bf; --accent2:#f7c873;
+    --marine:#4cc9f0; --land:#8de07b; --dino:#f6a15a;
+    --shadow:0 18px 50px rgba(0,0,0,.5);
+    --font:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --display:'Space Grotesk','Inter',sans-serif;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink)}
-  #app{display:flex;flex-direction:column;height:100dvh;max-width:820px;margin:0 auto}
-  header{padding:12px 16px 8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  header h1{font-size:20px;margin:0;letter-spacing:.5px}
-  header .tag{font-size:12px;color:var(--muted);flex:1}
-  .modeToggle{display:flex;background:var(--panel);border:1px solid var(--panel2);border-radius:999px;overflow:hidden;font-size:12px}
-  .modeToggle button{border:0;background:transparent;color:var(--muted);padding:6px 12px;cursor:pointer;font-weight:700}
-  .modeToggle button.on{background:var(--accent);color:#052018}
-  .bar{display:flex;gap:8px;align-items:center;padding:4px 16px 10px;flex-wrap:wrap}
-  .chip{font-size:12px;background:var(--panel);border:1px solid var(--panel2);padding:5px 10px;border-radius:999px;color:var(--muted)}
-  .chip b{color:var(--ink)}
-  .cat{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
-  .cat.marine{background:var(--marine)} .cat.land{background:var(--land)} .cat.dino{background:var(--dino)}
-  .prompt{padding:2px 16px 10px}
-  .prompt .card{background:linear-gradient(160deg,var(--panel),var(--panel2));border:1px solid #1c3e5c;border-radius:14px;padding:12px 14px}
-  .prompt .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
-  .prompt .name{font-size:22px;font-weight:700;margin:2px 0 4px}
-  .prompt .hint{font-size:14px;color:var(--muted)}
-  #map{flex:1;min-height:260px;margin:0 16px;border-radius:14px;overflow:hidden;border:1px solid #1c3e5c;background:#04070d;position:relative;cursor:grab}
+  html,body{margin:0;height:100%;font-family:var(--font);color:var(--ink);
+    background:
+      radial-gradient(1100px 720px at 72% -12%, #1b2748 0%, rgba(27,39,72,0) 58%),
+      radial-gradient(900px 700px at 10% 110%, #12233a 0%, rgba(18,35,58,0) 55%),
+      linear-gradient(180deg,var(--bg1),var(--bg2));
+    background-attachment:fixed;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  #app{display:flex;flex-direction:column;height:100dvh;max-width:860px;margin:0 auto;padding:0 2px}
+  header{padding:16px 18px 8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  header h1{font-family:var(--display);font-size:21px;margin:0;letter-spacing:-.2px;font-weight:600;
+    background:linear-gradient(90deg,#eaf2ff,#9fe9dd 70%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  header .tag{font-size:12px;color:var(--muted);flex:1;letter-spacing:.1px}
+  .modeToggle{display:flex;background:var(--panel);border:1px solid var(--border);border-radius:999px;overflow:hidden;font-size:12px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  .modeToggle button{border:0;background:transparent;color:var(--muted);padding:7px 15px;cursor:pointer;font-weight:600;font-family:var(--font);transition:.2s}
+  .modeToggle button.on{background:linear-gradient(180deg,var(--accent),var(--accent-deep));color:#06231e;box-shadow:0 4px 16px rgba(45,212,191,.35)}
+  .bar{display:flex;gap:9px;align-items:center;padding:6px 18px 12px;flex-wrap:wrap}
+  .chip{font-size:12px;background:var(--panel);border:1px solid var(--border);padding:7px 12px;border-radius:999px;color:var(--muted);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  .chip b{color:var(--ink);font-family:var(--display);font-weight:600}
+  .cat{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle;box-shadow:0 0 8px currentColor}
+  .cat.marine{background:var(--marine);color:var(--marine)} .cat.land{background:var(--land);color:var(--land)} .cat.dino{background:var(--dino);color:var(--dino)}
+  .prompt{padding:2px 18px 12px}
+  .prompt .card{background:linear-gradient(155deg,rgba(255,255,255,.08),rgba(255,255,255,.03));border:1px solid var(--border);border-radius:18px;padding:14px 16px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:var(--shadow)}
+  .prompt .k{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:1.6px;font-weight:600}
+  .prompt .name{font-family:var(--display);font-size:25px;font-weight:600;margin:4px 0 5px;letter-spacing:-.3px}
+  .prompt .hint{font-size:14px;color:var(--muted);line-height:1.45}
+  #map{flex:1;min-height:280px;margin:0 18px;border-radius:20px;overflow:hidden;border:1px solid var(--border);background:#03060d;position:relative;cursor:grab;box-shadow:var(--shadow)}
   #map:active{cursor:grabbing}
-  .foot{padding:10px 16px 16px;display:flex;gap:10px;align-items:center}
-  button.act{font:inherit;border:0;border-radius:12px;padding:12px 16px;font-weight:700;cursor:pointer;flex:1}
-  .btn-primary{background:var(--accent);color:#052018}
-  .btn-primary:disabled{background:#20493f;color:#6f8f86;cursor:not-allowed}
-  .footStatus{font-size:13px;color:var(--ink);background:var(--panel);border:1px solid var(--panel2);padding:12px 14px;border-radius:12px;flex:1;text-align:center;font-weight:600}
-  .hintline{font-size:12px;color:var(--muted);flex:0 0 auto;text-align:right;white-space:nowrap}
-  .overlay{position:fixed;inset:0;background:rgba(3,12,20,.72);display:flex;align-items:center;justify-content:center;padding:18px;z-index:1000}
-  .modal{background:var(--panel);border:1px solid #21496b;border-radius:18px;max-width:520px;width:100%;padding:20px;max-height:88dvh;overflow:auto}
-  .modal h2{margin:.1em 0 .3em}
+  .foot{padding:12px 18px 18px;display:flex;gap:12px;align-items:center}
+  button.act{font-family:var(--font);border:0;border-radius:14px;padding:14px 18px;font-weight:600;cursor:pointer;flex:1;font-size:15px;transition:transform .12s ease,box-shadow .2s}
+  button.act:active{transform:translateY(1px)}
+  .btn-primary{background:linear-gradient(180deg,var(--accent),var(--accent-deep));color:#06231e;box-shadow:0 8px 24px rgba(45,212,191,.32)}
+  .footStatus{font-size:13px;color:var(--ink);background:var(--panel);border:1px solid var(--border);padding:14px 16px;border-radius:14px;flex:1;text-align:center;font-weight:600;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  .hintline{font-size:12px;color:var(--muted);flex:0 0 auto;text-align:right;white-space:nowrap;font-family:var(--display)}
+  .overlay{position:fixed;inset:0;background:rgba(4,8,16,.66);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:18px;z-index:1000;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .modal{background:linear-gradient(160deg,rgba(24,33,54,.96),rgba(13,19,34,.96));border:1px solid var(--border2);border-radius:22px;max-width:530px;width:100%;padding:24px;max-height:88dvh;overflow:auto;box-shadow:var(--shadow);animation:pop .28s cubic-bezier(.2,.9,.3,1.2)}
+  @keyframes pop{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+  .modal h2{font-family:var(--display);margin:.1em 0 .3em;font-weight:600;letter-spacing:-.3px}
   .result-dist{font-size:14px;color:var(--muted)}
-  .score-big{font-size:40px;font-weight:800;color:var(--accent2);margin:6px 0}
-  .blurb{background:var(--panel2);border-radius:12px;padding:12px;font-size:14px;line-height:1.5;color:#d6e6f5;margin:10px 0}
-  .rows{display:flex;flex-direction:column;gap:6px;margin:10px 0}
-  .row{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;border-bottom:1px solid #17385433}
-  .row .pts{font-weight:700;color:var(--accent2)}
-  .sharegrid{font-size:26px;letter-spacing:3px;text-align:center;margin:10px 0}
-  .pin{font-size:22px;line-height:1}
+  .score-big{font-family:var(--display);font-size:46px;font-weight:700;margin:8px 0;letter-spacing:-1px;
+    background:linear-gradient(90deg,var(--accent2),#ffe6a8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .blurb{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:14px;padding:14px;font-size:14px;line-height:1.55;color:#dbe6f7;margin:12px 0}
+  .rows{display:flex;flex-direction:column;gap:2px;margin:12px 0}
+  .row{display:flex;justify-content:space-between;font-size:14px;padding:9px 2px;border-bottom:1px solid rgba(255,255,255,.06)}
+  .row .pts{font-weight:600;color:var(--accent2);font-family:var(--display)}
+  .sharegrid{font-size:28px;letter-spacing:4px;text-align:center;margin:12px 0}
+  .pin{font-size:24px;line-height:1}
   .muted{color:var(--muted)}
-  .btnrow{display:flex;gap:10px;margin-top:8px}
-  .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:var(--accent);color:#052018;font-weight:700;padding:10px 16px;border-radius:10px;z-index:2000;opacity:0;transition:opacity .2s}
+  .btnrow{display:flex;gap:12px;margin-top:10px}
+  .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:linear-gradient(180deg,var(--accent),var(--accent-deep));color:#06231e;font-weight:700;padding:11px 18px;border-radius:12px;z-index:2000;opacity:0;transition:opacity .2s;box-shadow:0 8px 24px rgba(45,212,191,.4)}
   .toast.show{opacity:1}
 </style>
 </head>
@@ -96,17 +117,37 @@ const POOL = [
 {name:"Giant Panda",cat:"land",lat:30.7,lon:103.0,difficulty:2,hint:"A bamboo-eating bear from misty mountains.",blurb:"Giant pandas live in a few mountain ranges of central China, mainly Sichuan, feeding almost entirely on bamboo."},
 {name:"Polar Bear",cat:"land",lat:75.0,lon:-95.0,difficulty:2,hint:"The largest land carnivore, at home on sea ice.",blurb:"Polar bears hunt seals across the Arctic sea ice around Canada, Greenland, Svalbard, Russia and Alaska."},
 {name:"African Elephant",cat:"land",lat:-2.3,lon:34.8,difficulty:2,hint:"The largest land animal, on savanna grasslands.",blurb:"African elephants range across sub-Saharan savanna and forest; the East African plains of Kenya and Tanzania hold famous herds."},
+{name:"Lion",cat:"land",lat:-1.5,lon:35.1,difficulty:2,hint:"The big cat of the African savanna.",blurb:"Lions roam the grasslands of eastern and southern Africa, living in prides on plains such as Kenya's Masai Mara."},
+{name:"Cheetah",cat:"land",lat:-19.0,lon:23.5,difficulty:3,hint:"The fastest land animal, a spotted sprinter.",blurb:"Cheetahs sprint across the open plains of eastern and southern Africa, reaching 100 km/h in short bursts."},
+{name:"Giraffe",cat:"land",lat:-1.4,lon:35.5,difficulty:2,hint:"The tallest animal, browsing on treetops.",blurb:"Giraffes browse acacia trees across the African savanna, their long necks reaching leaves other animals cannot."},
+{name:"Hippopotamus",cat:"land",lat:-13.1,lon:31.8,difficulty:3,hint:"A huge river-dwelling grazer of Africa.",blurb:"Hippos spend their days in African rivers and lakes, such as Zambia's Luangwa, grazing on land by night."},
+{name:"Chimpanzee",cat:"land",lat:-4.9,lon:29.6,difficulty:3,hint:"Our close great-ape cousin of the forest.",blurb:"Chimpanzees live in the forests of central and West Africa, including Tanzania's Gombe, using tools to find food."},
+{name:"White Rhinoceros",cat:"land",lat:-25.0,lon:31.5,difficulty:3,hint:"A massive horned grazer of the savanna.",blurb:"White rhinos graze the grasslands of southern Africa, with strongholds in South Africa's Kruger region."},
 {name:"Bengal Tiger",cat:"land",lat:21.9,lon:89.2,difficulty:3,hint:"A striped big cat of mangrove and jungle.",blurb:"Bengal tigers live across India and Bangladesh, including the tidal Sundarbans mangroves shared between the two countries."},
 {name:"Ring-tailed Lemur",cat:"land",lat:-22.0,lon:45.0,difficulty:3,hint:"A striped-tailed primate from one big island.",blurb:"Ring-tailed lemurs are found only on Madagascar, sunbathing in troops across its southern spiny forests."},
 {name:"Giant Anteater",cat:"land",lat:-16.5,lon:-56.5,difficulty:4,hint:"A long-snouted insect specialist of wetlands.",blurb:"Giant anteaters range across Central and South America; Brazil's Pantanal wetland is a stronghold."},
+{name:"Jaguar",cat:"land",lat:-3.0,lon:-62.0,difficulty:3,hint:"The big cat of the American tropics.",blurb:"Jaguars prowl the Amazon rainforest and wetlands of Central and South America, powerful swimmers and ambush hunters."},
+{name:"Andean Condor",cat:"land",lat:-32.0,lon:-70.0,difficulty:4,hint:"A giant vulture of high mountain skies.",blurb:"Andean condors soar over the peaks of South America's Andes, among the largest flying birds by wingspan."},
 {name:"Snow Leopard",cat:"land",lat:35.0,lon:77.0,difficulty:4,hint:"A ghostly cat of high, cold mountains.",blurb:"Snow leopards prowl the high ranges of Central Asia — the Himalayas, Tibet and the mountains of Kyrgyzstan and Mongolia."},
+{name:"Red Panda",cat:"land",lat:27.5,lon:88.5,difficulty:4,hint:"A small russet mammal of mountain forest.",blurb:"Red pandas live in the temperate bamboo forests of the eastern Himalayas and southwestern China."},
 {name:"Kiwi",cat:"land",lat:-41.3,lon:174.8,difficulty:3,hint:"A flightless nocturnal bird with a long beak.",blurb:"Kiwi are found only in New Zealand, snuffling for worms in the forest floor at night with nostrils at the tip of their bill."},
 {name:"Meerkat",cat:"land",lat:-24.5,lon:20.0,difficulty:3,hint:"A social burrowing mammal of southern deserts.",blurb:"Meerkats live in the Kalahari and surrounding drylands of southern Africa, taking turns as lookout sentries."},
 {name:"Three-toed Sloth",cat:"land",lat:9.2,lon:-79.5,difficulty:4,hint:"A slow tree-dweller of tropical rainforest.",blurb:"Three-toed sloths inhabit the rainforests of Central and northern South America, moving so slowly algae grows on their fur."},
 {name:"American Bison",cat:"land",lat:44.6,lon:-110.5,difficulty:3,hint:"A shaggy plains giant of North America.",blurb:"Bison once covered the Great Plains; today Yellowstone in Wyoming holds one of the last continuously wild herds."},
+{name:"Grizzly Bear",cat:"land",lat:60.0,lon:-145.0,difficulty:3,hint:"A powerful brown bear of northern wilds.",blurb:"Grizzlies roam the forests and coasts of Alaska and western Canada, feasting on salmon runs each summer."},
+{name:"Gray Wolf",cat:"land",lat:62.0,lon:28.0,difficulty:3,hint:"A pack-hunting canid of northern forests.",blurb:"Gray wolves range across the forests of North America and Eurasia, hunting in coordinated packs."},
+{name:"Moose",cat:"land",lat:55.0,lon:-120.0,difficulty:3,hint:"The largest deer, with broad antlers.",blurb:"Moose browse the boreal forests and wetlands of Canada, Scandinavia and Russia, wading to feed on water plants."},
+{name:"Arctic Fox",cat:"land",lat:78.0,lon:20.0,difficulty:4,hint:"A small fox that turns white in winter.",blurb:"Arctic foxes live across the far northern tundra, from Svalbard to Siberia, their coats turning white in winter."},
 {name:"Orangutan",cat:"land",lat:0.5,lon:114.0,difficulty:3,hint:"A red-haired great ape of steamy jungle.",blurb:"Orangutans live only on Borneo and Sumatra, the largest tree-dwelling animals, swinging through Southeast Asian rainforest."},
+{name:"Proboscis Monkey",cat:"land",lat:5.5,lon:118.0,difficulty:5,hint:"A big-nosed monkey of mangrove forest.",blurb:"Proboscis monkeys live only on Borneo, the males sporting large pendulous noses, in riverside and mangrove forests."},
+{name:"Sun Bear",cat:"land",lat:3.0,lon:102.0,difficulty:5,hint:"The smallest bear, of Southeast Asian jungle.",blurb:"Sun bears, the smallest bears, live in the tropical forests of Southeast Asia, using long tongues to reach honey."},
+{name:"Japanese Macaque",cat:"land",lat:36.7,lon:138.5,difficulty:4,hint:"A 'snow monkey' that bathes in hot springs.",blurb:"Japanese macaques live farther north than any other monkey, famously bathing in hot springs in the mountains of Japan."},
 {name:"Mountain Gorilla",cat:"land",lat:-1.4,lon:29.5,difficulty:4,hint:"A great ape of high volcanic forest.",blurb:"Mountain gorillas survive only in the Virunga volcanoes and Bwindi forest where Rwanda, Uganda and the DR Congo meet."},
 {name:"Platypus",cat:"land",lat:-33.0,lon:150.5,difficulty:4,hint:"An egg-laying mammal with a duck-like bill.",blurb:"The platypus lives in freshwater streams of eastern Australia, one of the few mammals that lays eggs."},
+{name:"Koala",cat:"land",lat:-28.0,lon:153.0,difficulty:2,hint:"A sleepy eucalyptus-eating marsupial.",blurb:"Koalas live in the eucalyptus forests of eastern Australia, sleeping up to 20 hours a day."},
+{name:"Tasmanian Devil",cat:"land",lat:-42.0,lon:146.5,difficulty:4,hint:"A fierce marsupial found on one island.",blurb:"Tasmanian devils survive only on the island of Tasmania, Australia, scavenging with the strongest bite for their size."},
+{name:"Quokka",cat:"land",lat:-32.0,lon:115.5,difficulty:5,hint:"A small smiling marsupial of an island.",blurb:"Quokkas are famous on Rottnest Island off Western Australia, small wallaby relatives with cheerful faces."},
+{name:"Saltwater Crocodile",cat:"land",lat:-12.5,lon:131.0,difficulty:3,hint:"The largest living reptile, in coastal rivers.",blurb:"Saltwater crocodiles lurk in the rivers and estuaries of northern Australia and Southeast Asia, the largest reptiles alive."},
 {name:"Fennec Fox",cat:"land",lat:23.0,lon:10.0,difficulty:4,hint:"A tiny big-eared fox of hot sand.",blurb:"Fennec foxes live across the Sahara of North Africa, their huge ears shedding heat and tracking prey underground."},
 {name:"Capybara",cat:"land",lat:-15.5,lon:-58.0,difficulty:4,hint:"The world's largest rodent, near water.",blurb:"Capybaras live across South America's wetlands and riverbanks, semi-aquatic grazers the size of a large dog."},
 {name:"Wild Bactrian Camel",cat:"land",lat:41.0,lon:90.0,difficulty:5,hint:"A two-humped camel of a cold desert.",blurb:"Critically endangered wild Bactrian camels survive in the Gobi Desert of Mongolia and northwest China."},
@@ -114,32 +155,62 @@ const POOL = [
 {name:"Galápagos Giant Tortoise",cat:"land",lat:-0.6,lon:-90.4,difficulty:3,hint:"A century-living reptile of volcanic isles.",blurb:"Galápagos giant tortoises are found only on the Galápagos off Ecuador, with distinct shells on different islands."},
 /* ---- MARINE ---- */
 {name:"Emperor Penguin",cat:"marine",lat:-77.5,lon:166.7,difficulty:2,hint:"A flightless diver that breeds on winter ice.",blurb:"Emperor penguins breed on Antarctic sea ice, enduring −40°C and diving over 500 m for fish and squid."},
+{name:"Bottlenose Dolphin",cat:"marine",lat:25.5,lon:-80.2,difficulty:2,hint:"A playful, clever coastal dolphin.",blurb:"Bottlenose dolphins live in warm and temperate seas worldwide, common along coasts like Florida's, and are highly intelligent."},
+{name:"Humpback Whale",cat:"marine",lat:20.8,lon:-156.5,difficulty:3,hint:"A singing whale famous for breaching.",blurb:"Humpback whales migrate thousands of miles; many gather to breed in the warm waters around Hawaii each winter."},
+{name:"Blue Whale",cat:"marine",lat:34.0,lon:-120.5,difficulty:4,hint:"The largest animal that has ever lived.",blurb:"Blue whales, the largest animals ever, feed on krill in rich waters such as off California and Sri Lanka."},
+{name:"Sperm Whale",cat:"marine",lat:38.5,lon:-28.0,difficulty:4,hint:"A deep-diving whale with a huge head.",blurb:"Sperm whales dive over a kilometre deep to hunt squid; the waters off the Azores are a reliable place to see them."},
 {name:"Great White Shark",cat:"marine",lat:-34.6,lon:20.0,difficulty:3,hint:"An apex predator of cool coastal seas.",blurb:"Great whites patrol temperate coasts worldwide; the seas off South Africa's Cape are a famous hotspot."},
+{name:"Hammerhead Shark",cat:"marine",lat:24.0,lon:-80.0,difficulty:4,hint:"A shark with a distinctive wide head.",blurb:"Hammerhead sharks patrol warm coastal seas worldwide, using their broad heads to sense and pin prey."},
+{name:"Whale Shark",cat:"marine",lat:21.0,lon:-86.8,difficulty:4,hint:"The biggest fish, a gentle filter feeder.",blurb:"Whale sharks gather in warm seas worldwide; huge numbers aggregate off Mexico's Yucatán Peninsula each summer."},
+{name:"Manta Ray",cat:"marine",lat:3.2,lon:73.0,difficulty:4,hint:"A gentle giant ray that filters plankton.",blurb:"Manta rays glide through tropical seas like the Maldives, filter-feeding on plankton with wingspans up to 7 m."},
 {name:"Sea Otter",cat:"marine",lat:55.0,lon:-160.0,difficulty:3,hint:"A tool-using mammal of cold kelp forests.",blurb:"Sea otters live along the North Pacific rim from California to Alaska, cracking shellfish on stone tools."},
+{name:"Steller Sea Lion",cat:"marine",lat:60.0,lon:-148.0,difficulty:4,hint:"A large sea lion of the North Pacific.",blurb:"Steller sea lions haul out on rocky coasts around the North Pacific rim, from Alaska to Japan."},
 {name:"Clownfish",cat:"marine",lat:-18.3,lon:147.7,difficulty:3,hint:"A little reef fish that hides in anemones.",blurb:"Clownfish live in warm Indo-Pacific reefs such as Australia's Great Barrier Reef, sheltering among stinging anemones."},
+{name:"Green Sea Turtle",cat:"marine",lat:-23.4,lon:151.9,difficulty:3,hint:"A reef-grazing sea turtle.",blurb:"Green sea turtles graze seagrass and algae on tropical reefs like Australia's Great Barrier Reef."},
+{name:"Leatherback Turtle",cat:"marine",lat:10.6,lon:-85.8,difficulty:4,hint:"The largest sea turtle, a deep diver.",blurb:"Leatherback turtles roam every ocean and nest on tropical beaches such as Costa Rica's Pacific coast."},
 {name:"West Indian Manatee",cat:"marine",lat:27.8,lon:-82.6,difficulty:3,hint:"A gentle 'sea cow' of warm shallows.",blurb:"Manatees graze seagrass in the warm coastal waters and springs of Florida and the Caribbean."},
 {name:"Orca",cat:"marine",lat:48.4,lon:-123.0,difficulty:3,hint:"A black-and-white apex ocean predator.",blurb:"Orcas roam every ocean; the Salish Sea off Washington and British Columbia is home to well-studied resident pods."},
+{name:"Atlantic Puffin",cat:"marine",lat:65.0,lon:-17.0,difficulty:3,hint:"A colourful seabird that nests in cliffs.",blurb:"Atlantic puffins breed in huge cliff colonies around the North Atlantic, especially Iceland, diving for fish."},
+{name:"Blue-footed Booby",cat:"marine",lat:-0.4,lon:-90.3,difficulty:4,hint:"A seabird famous for its bright blue feet.",blurb:"Blue-footed boobies nest on the Galápagos and nearby coasts, the males showing off their vivid blue feet in courtship."},
 {name:"Narwhal",cat:"marine",lat:74.0,lon:-58.0,difficulty:4,hint:"A tusked whale of high-Arctic waters.",blurb:"Narwhals live in the Arctic waters around Baffin Bay between Canada and Greenland, the males bearing a spiral tusk."},
-{name:"Whale Shark",cat:"marine",lat:21.0,lon:-86.8,difficulty:4,hint:"The biggest fish, a gentle filter feeder.",blurb:"Whale sharks gather in warm seas worldwide; huge numbers aggregate off Mexico's Yucatán Peninsula each summer."},
-{name:"Marine Iguana",cat:"marine",lat:-0.9,lon:-91.0,difficulty:4,hint:"The only lizard that forages in the sea.",blurb:"Marine iguanas live solely on the Galápagos, diving into cold Pacific water to graze algae and sneezing out salt."},
-{name:"Giant Pacific Octopus",cat:"marine",lat:48.4,lon:-124.7,difficulty:4,hint:"A huge, clever mollusc of cold coasts.",blurb:"Giant Pacific octopuses live along the cold northern Pacific from California to Alaska and Japan."},
+{name:"Beluga Whale",cat:"marine",lat:68.0,lon:-89.0,difficulty:4,hint:"A white, chatty whale of cold northern seas.",blurb:"Belugas live across the Arctic, gathering in summer estuaries like Canada's Hudson Bay to moult and calve."},
 {name:"Walrus",cat:"marine",lat:70.0,lon:-160.0,difficulty:3,hint:"A tusked, whiskered giant of Arctic seas.",blurb:"Walruses haul out on ice and shores across the Arctic, using tusks and whiskers to find clams on the seabed."},
+{name:"Harp Seal",cat:"marine",lat:50.0,lon:-60.0,difficulty:4,hint:"An ice-breeding seal with white pups.",blurb:"Harp seals breed on the pack ice of the North Atlantic, such as the Gulf of St Lawrence, their pups born snowy white."},
+{name:"Leopard Seal",cat:"marine",lat:-66.0,lon:-60.0,difficulty:4,hint:"A sleek Antarctic seal that hunts penguins.",blurb:"Leopard seals patrol the Antarctic pack ice, powerful predators that hunt penguins and other seals."},
+{name:"Southern Elephant Seal",cat:"marine",lat:-54.5,lon:-37.0,difficulty:5,hint:"The largest seal, males with a trunk-like nose.",blurb:"Southern elephant seals breed on subantarctic islands like South Georgia, the bulls weighing several tonnes."},
+{name:"Wandering Albatross",cat:"marine",lat:-46.0,lon:51.0,difficulty:5,hint:"A seabird with the longest wingspan.",blurb:"Wandering albatrosses glide the Southern Ocean for years at a time, wingspans over 3 m, nesting on remote islands."},
+{name:"Marine Iguana",cat:"marine",lat:-0.9,lon:-91.0,difficulty:4,hint:"The only lizard that forages in the sea.",blurb:"Marine iguanas live solely on the Galápagos, diving into cold Pacific water to graze algae and sneezing out salt."},
 {name:"Galápagos Penguin",cat:"marine",lat:-0.3,lon:-90.6,difficulty:5,hint:"The only penguin found at the equator.",blurb:"The Galápagos penguin is the sole penguin living at the equator, cooled by the Humboldt Current in the Galápagos."},
+{name:"Giant Pacific Octopus",cat:"marine",lat:48.4,lon:-124.7,difficulty:4,hint:"A huge, clever mollusc of cold coasts.",blurb:"Giant Pacific octopuses live along the cold northern Pacific from California to Alaska and Japan."},
+{name:"Blue-ringed Octopus",cat:"marine",lat:-33.0,lon:151.3,difficulty:5,hint:"A tiny but highly venomous octopus.",blurb:"Blue-ringed octopuses live in tide pools and reefs around Australia and the Indo-Pacific, flashing blue rings in warning."},
+{name:"Giant Cuttlefish",cat:"marine",lat:-33.0,lon:137.8,difficulty:5,hint:"A colour-changing master of camouflage.",blurb:"Giant cuttlefish gather to breed off Whyalla in South Australia, shifting colour and texture in seconds."},
+{name:"Golden Jellyfish",cat:"marine",lat:7.2,lon:134.4,difficulty:5,hint:"Millions pulse through a marine lake.",blurb:"Golden jellyfish fill Jellyfish Lake on Palau, migrating across the lake each day to follow the sun."},
+{name:"Ocean Sunfish",cat:"marine",lat:-8.5,lon:115.5,difficulty:5,hint:"A huge, strange disc-shaped fish.",blurb:"The ocean sunfish (mola) is the heaviest bony fish; divers meet them off Bali and other temperate and tropical seas."},
 {name:"Leafy Sea Dragon",cat:"marine",lat:-35.3,lon:138.4,difficulty:5,hint:"A camouflaged relative of the seahorse.",blurb:"Leafy sea dragons live only in the cool coastal waters of southern and western Australia, disguised as drifting weed."},
 {name:"Coelacanth",cat:"marine",lat:-12.2,lon:44.3,difficulty:5,hint:"A 'living fossil' fish once thought extinct.",blurb:"Coelacanths, long believed extinct with the dinosaurs, were rediscovered off the Comoros Islands near Madagascar."},
-{name:"Beluga Whale",cat:"marine",lat:68.0,lon:-89.0,difficulty:4,hint:"A white, chatty whale of cold northern seas.",blurb:"Belugas live across the Arctic, gathering in summer estuaries like Canada's Hudson Bay to moult and calve."},
+{name:"Vaquita",cat:"marine",lat:31.0,lon:-114.5,difficulty:5,hint:"The world's rarest, smallest porpoise.",blurb:"The critically endangered vaquita survives only in the northern Gulf of California, with just a handful left."},
+{name:"Axolotl",cat:"marine",lat:19.3,lon:-99.1,difficulty:5,hint:"A salamander that never grows up.",blurb:"Axolotls live only in the ancient canals of Xochimilco near Mexico City, keeping their gills and aquatic life for life."},
 {name:"Dugong",cat:"marine",lat:24.5,lon:52.5,difficulty:5,hint:"A seagrass-grazing cousin of the manatee.",blurb:"Dugongs graze seagrass in warm Indo-Pacific shallows, with large populations in the Persian Gulf and off Australia."},
 /* ---- DINOSAURS (fossil sites) ---- */
 {name:"Tyrannosaurus rex",cat:"dino",lat:47.5,lon:-106.5,difficulty:3,hint:"Its best fossils come from a US badland.",blurb:"T. rex fossils come from the Hell Creek Formation of Montana and the Dakotas, from the very end of the Cretaceous ~66 Mya."},
 {name:"Triceratops",cat:"dino",lat:45.0,lon:-104.0,difficulty:3,hint:"A three-horned plant-eater of the American West.",blurb:"Triceratops is found in the latest-Cretaceous rocks of Montana, Wyoming and the Dakotas, alongside T. rex."},
 {name:"Stegosaurus",cat:"dino",lat:40.0,lon:-108.0,difficulty:4,hint:"Plated dinosaur from a famous Western bed.",blurb:"Stegosaurus comes mainly from the Morrison Formation of Colorado, Wyoming and Utah, deposited in the Late Jurassic."},
-{name:"Velociraptor",cat:"dino",lat:43.5,lon:100.0,difficulty:5,hint:"A feathered hunter from a central Asian desert.",blurb:"Real Velociraptor fossils come from the Gobi Desert of Mongolia and northern China — turkey-sized and feathered."},
-{name:"Spinosaurus",cat:"dino",lat:30.5,lon:-6.0,difficulty:5,hint:"A sail-backed predator from North Africa.",blurb:"Spinosaurus is known from the Kem Kem beds of Morocco, a semi-aquatic giant of Cretaceous river systems."},
+{name:"Allosaurus",cat:"dino",lat:39.3,lon:-110.7,difficulty:4,hint:"A big Jurassic predator of the American West.",blurb:"Allosaurus is common in the Morrison Formation of Utah and neighbouring states, a top predator of the Late Jurassic."},
 {name:"Diplodocus",cat:"dino",lat:42.0,lon:-107.0,difficulty:4,hint:"A whip-tailed long-necked giant.",blurb:"Diplodocus comes from the Morrison Formation of Wyoming and Colorado, one of the longest dinosaurs known."},
-{name:"Iguanodon",cat:"dino",lat:50.4,lon:4.4,difficulty:5,hint:"An early-found plant-eater from Europe.",blurb:"Iguanodon is famous from a bonebed at Bernissart in Belgium, one of the first dinosaurs ever scientifically described."},
-{name:"Argentinosaurus",cat:"dino",lat:-38.0,lon:-70.0,difficulty:4,hint:"One of the biggest animals ever, from the south.",blurb:"Argentinosaurus, among the largest land animals ever, is known from Patagonia in Argentina."},
+{name:"Ankylosaurus",cat:"dino",lat:48.5,lon:-107.0,difficulty:4,hint:"An armoured dinosaur with a club tail.",blurb:"Ankylosaurus, covered in bony armour with a club-like tail, comes from the latest-Cretaceous rocks of Montana and Alberta."},
+{name:"Parasaurolophus",cat:"dino",lat:52.3,lon:-112.8,difficulty:5,hint:"A duck-billed dinosaur with a long crest.",blurb:"Parasaurolophus, with its long hollow head crest, is found in the Cretaceous rocks of Alberta and the American Southwest."},
+{name:"Pteranodon",cat:"dino",lat:38.8,lon:-100.0,difficulty:5,hint:"A crested flying reptile of ancient seas.",blurb:"Pteranodon, a large crested pterosaur, is found in the Cretaceous chalk of Kansas, once covered by a shallow sea."},
 {name:"Coelophysis",cat:"dino",lat:36.3,lon:-106.5,difficulty:5,hint:"A slim early dinosaur found in huge numbers.",blurb:"Hundreds of Coelophysis were found together at Ghost Ranch, New Mexico, from the Late Triassic."},
+{name:"Velociraptor",cat:"dino",lat:43.5,lon:100.0,difficulty:5,hint:"A feathered hunter from a central Asian desert.",blurb:"Real Velociraptor fossils come from the Gobi Desert of Mongolia and northern China — turkey-sized and feathered."},
+{name:"Gallimimus",cat:"dino",lat:44.3,lon:103.0,difficulty:5,hint:"An ostrich-like running dinosaur.",blurb:"Gallimimus, a fast ostrich-like dinosaur, comes from the Late Cretaceous Gobi Desert of Mongolia."},
+{name:"Therizinosaurus",cat:"dino",lat:43.9,lon:99.5,difficulty:5,hint:"A dinosaur with enormous scythe-like claws.",blurb:"Therizinosaurus, bearing metre-long claws, is known from the Late Cretaceous of Mongolia."},
+{name:"Spinosaurus",cat:"dino",lat:30.5,lon:-6.0,difficulty:5,hint:"A sail-backed predator from North Africa.",blurb:"Spinosaurus is known from the Kem Kem beds of Morocco, a semi-aquatic giant of Cretaceous river systems."},
+{name:"Brachiosaurus",cat:"dino",lat:-9.5,lon:39.5,difficulty:5,hint:"A giraffe-like giant with longer front legs.",blurb:"Brachiosaurus and its relatives are known from the Late Jurassic, including the Tendaguru beds of Tanzania."},
+{name:"Iguanodon",cat:"dino",lat:50.4,lon:4.4,difficulty:5,hint:"An early-found plant-eater from Europe.",blurb:"Iguanodon is famous from a bonebed at Bernissart in Belgium, one of the first dinosaurs ever scientifically described."},
 {name:"Megalosaurus",cat:"dino",lat:51.7,lon:-1.3,difficulty:5,hint:"The very first dinosaur ever named.",blurb:"Megalosaurus, from the Jurassic rocks of Oxfordshire, England, was the first dinosaur to be formally named, in 1824."},
+{name:"Baryonyx",cat:"dino",lat:51.2,lon:-0.3,difficulty:5,hint:"A fish-eating predator with a big claw.",blurb:"Baryonyx, a fish-eating theropod with a large thumb claw, was discovered in a clay pit in Surrey, England."},
+{name:"Plateosaurus",cat:"dino",lat:48.8,lon:9.2,difficulty:5,hint:"An early long-necked plant-eater.",blurb:"Plateosaurus, an early long-necked dinosaur, is found in Late Triassic rocks across Germany and central Europe."},
+{name:"Argentinosaurus",cat:"dino",lat:-38.0,lon:-70.0,difficulty:4,hint:"One of the biggest animals ever, from the south.",blurb:"Argentinosaurus, among the largest land animals ever, is known from Patagonia in Argentina."},
 {name:"Carnotaurus",cat:"dino",lat:-45.0,lon:-68.0,difficulty:5,hint:"A horned meat-eater from the far south.",blurb:"Carnotaurus, a horned predator with tiny arms, comes from the Cretaceous of Patagonia, Argentina."}
 ];
 
@@ -152,7 +223,6 @@ function todayDayNumber(){const now=new Date();const utc=Date.UTC(now.getFullYea
 
 const MAX_PER_ROUND=[100,150,200,250,300]; // sums to 1000
 function buildRounds(rng){
-  // ensure a spread of categories where possible, then difficulty order
   const picks=seededShuffle(POOL,rng).slice(0,5);
   picks.sort((a,b)=>a.difficulty-b.difficulty);
   return picks.map((c,i)=>({...c,maxPts:MAX_PER_ROUND[i]}));
@@ -176,17 +246,17 @@ function newGame(){
 const globeEl=document.getElementById('map');
 function truthEmoji(cat){return cat==='marine'?'🌊':cat==='dino'?'🦖':'🐾';}
 const globe=Globe()(globeEl)
-  .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
-  .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
+  .globeImageUrl('https://raw.githubusercontent.com/turban/webgl-earth/master/images/2_no_clouds_4k.jpg')
+  .bumpImageUrl('https://raw.githubusercontent.com/turban/webgl-earth/master/images/elev_bump_4k.jpg')
   .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
-  .showAtmosphere(true).atmosphereColor('#6cc0ff').atmosphereAltitude(0.16)
+  .showAtmosphere(true).atmosphereColor('#7cc4ff').atmosphereAltitude(0.18)
   .htmlElementsData([])
-  .htmlElement(d=>{const el=document.createElement('div');el.textContent=d.emoji;el.style.fontSize='26px';el.style.transform='translate(-50%,-90%)';el.style.pointerEvents='none';el.style.filter='drop-shadow(0 2px 2px rgba(0,0,0,.7))';return el;})
+  .htmlElement(d=>{const el=document.createElement('div');el.textContent=d.emoji;el.style.fontSize='27px';el.style.transform='translate(-50%,-90%)';el.style.pointerEvents='none';el.style.filter='drop-shadow(0 2px 3px rgba(0,0,0,.8))';return el;})
   .htmlLat(d=>d.lat).htmlLng(d=>d.lng)
-  .arcsData([]).arcColor(()=>'#ffd166').arcStroke(0.6).arcAltitudeAutoScale(0.4)
+  .arcsData([]).arcColor(()=>'#f7c873').arcStroke(0.7).arcAltitudeAutoScale(0.4)
   .arcDashLength(0.5).arcDashGap(0.25).arcDashAnimateTime(1500);
 globe.pointOfView({lat:20,lng:0,altitude:2.3});
-const ctr=globe.controls(); ctr.autoRotate=false; ctr.enableZoom=true; ctr.minDistance=140; ctr.maxDistance=520; ctr.rotateSpeed=0.6;
+const ctr=globe.controls(); ctr.autoRotate=false; ctr.enableZoom=true; ctr.minDistance=104; ctr.maxDistance=650; ctr.rotateSpeed=0.55; ctr.zoomSpeed=1.1;
 function sizeGlobe(){globe.width(globeEl.clientWidth).height(globeEl.clientHeight);}
 sizeGlobe(); new ResizeObserver(sizeGlobe).observe(globeEl);
 
@@ -203,7 +273,11 @@ function midLngOf(a,b){let d=b-a;if(d>180)d-=360;if(d<-180)d+=360;let m=a+d/2;if
 
 /* ===================== Distance + scoring ===================== */
 function haversine(a,b){const R=6371,toR=x=>x*Math.PI/180;const dLat=toR(b.lat-a.lat),dLon=toR(b.lng-a.lng);const lat1=toR(a.lat),lat2=toR(b.lat);const h=Math.sin(dLat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2;return 2*R*Math.asin(Math.min(1,Math.sqrt(h)));}
-function scoreFor(distKm,maxPts){return Math.round(maxPts*Math.exp(-distKm/1500));}
+function scoreFor(distKm,maxPts){
+  const free=300;                                 // within 300 km = full marks
+  const d=Math.max(0,distKm-free);
+  return Math.round(maxPts*Math.exp(-d/2600));     // gentle falloff
+}
 
 /* ===================== Round flow ===================== */
 function renderRound(){
@@ -233,11 +307,11 @@ function reveal(){
   globe.arcsData([{startLat:guess.lat,startLng:guess.lng,endLat:r.lat,endLng:r.lon}]);
   // Dramatic fly-in: pull back to space, then swoop down to frame guess + answer.
   const midLat=(guess.lat+r.lat)/2, midLng=midLngOf(guess.lng,r.lon);
-  const frameAlt=Math.min(2.3,Math.max(0.65,dist/3200));
+  const frameAlt=Math.min(2.3,Math.max(0.55,dist/3200));
   const ct=globe.controls(); ct.autoRotate=false;
-  globe.pointOfView({lat:midLat*0.5, lng:midLng, altitude:3.6}, 500);            // yank back into orbit
-  setTimeout(()=>globe.pointOfView({lat:midLat, lng:midLng, altitude:frameAlt}, 1500), 520); // swoop down
-  setTimeout(()=>showResult(r,dist,pts), 2200);                                  // popup only after the flight
+  globe.pointOfView({lat:midLat*0.5, lng:midLng, altitude:3.6}, 500);
+  setTimeout(()=>globe.pointOfView({lat:midLat, lng:midLng, altitude:frameAlt}, 1500), 520);
+  setTimeout(()=>showResult(r,dist,pts), 2200);
 }
 function next(){
   idx++; closeOverlay();
@@ -267,7 +341,7 @@ function updateStreak(){
   if(mode!=='daily') return getStreak();
   try{
     const s=JSON.parse(localStorage.getItem('habitattap')||'{}');
-    if(s.lastDay===dayNum) return s.streak||1;           // already counted today
+    if(s.lastDay===dayNum) return s.streak||1;
     s.streak = (s.lastDay===dayNum-1) ? (s.streak||0)+1 : 1;
     s.lastDay=dayNum; localStorage.setItem('habitattap',JSON.stringify(s));
     return s.streak;
@@ -300,7 +374,7 @@ function finish(){
       '<button class="act btn-primary" onclick="doShare()">Share result</button>'+
       '<button class="act btn-primary" onclick="closeOverlay();newGame()">'+(mode==='daily'?'Replay':'Play again')+'</button>'+
     '</div>'+
-    (mode==='daily'?'<p class="muted" style="text-align:center;font-size:12px;margin:10px 0 0">Come back tomorrow for puzzle #'+(dayNum+1)+'</p>':'')
+    (mode==='daily'?'<p class="muted" style="text-align:center;font-size:12px;margin:12px 0 0">Come back tomorrow for puzzle #'+(dayNum+1)+'</p>':'')
   );
 }
 
